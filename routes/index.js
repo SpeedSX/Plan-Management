@@ -67,14 +67,24 @@ function loadDictionaries(conn, res, next, callback)
     );
 }
 
+function formatSQLDate(time)
+{
+    return "'" + time.format('YYYY-MM-DD hh:mm:ss') + "'";
+}
+
 function renderPlannedJobs(conn, res, next) {
     fs.readFile('./Plan.sql', 'utf8', function (err, data) {
         if (err) {
             console.log("Error reading file with query text: " + err);
             return next(err);
         }
-        //console.log(data);
-        var planSql = data;
+        var startTime = moment().startOf('day');
+        var endTime = moment().endOf('day');
+        var planSql = data
+            .replace(/{STARTDATE}/g, formatSQLDate(startTime))
+            .replace(/{ENDDATE}/g, formatSQLDate(endTime));
+        console.log(planSql);
+
         conn.query(planSql, function (err, results) {
             if (err) {
                 console.log("Error running plan sql: " + err);

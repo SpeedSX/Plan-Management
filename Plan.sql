@@ -117,14 +117,36 @@ end)
  j.SplitPart1, j.SplitPart2, j.SplitPart3, opi.SplitMode1, opi.SplitMode2, opi.SplitMode3,
  j.JobColor,
  cast((case when exists (select * from OrderNotes orn where orn.OrderID = wo.N and orn.UseTech = 1) then 1 else 0 end) as bit) as HasTechNotes,
-cast((opi.OwnCost + opi.ItemProfit) * wo.Course as decimal(18,2)) as ItemCost
-,
-ColorsA, ColorsB, PaperType, PrintType, PaperDensity, Pages, MachNum, NotebookPages, PaperFormatX, PaperFormatY, sp.Cathegory, cast(0 as int) as PantoneCountA, cast(0 as int) as PantoneCountB, (select top 1 cast(sl.Type as varchar(10)) + ':' + cast(opi1.Part as varchar(10)) from Service_Lakirovka sl inner join OrderProcessItem opi1 on sl.ItemID = opi1.ItemID   where opi1.OrderID = opi.OrderID and (opi1.Part = opi.Part or opi1.Part > 1000) and opi1.Enabled = 1 order by sl.N) as ProtectLakType1, (select top 1 cast(sl.Type as varchar(10)) + ':' + cast(opi1.Part as varchar(10)) from Service_Lakirovka sl inner join OrderProcessItem opi1 on sl.ItemID = opi1.ItemID   where opi1.OrderID = opi.OrderID and (opi1.Part = opi.Part or opi1.Part > 1000) and opi1.Enabled = 1 order by sl.N desc) as ProtectLakType2, CallCustomer, cast((select count(*) from OrderProcessItem opi2 where opi2.OrderID = opi.OrderID   and opi2.Enabled = 1 and opi2.ContractorProcess = 1 and opi2.ProcessID <> 2 and opi2.ProcessID <> 39 and (opi2.Part = opi.Part or opi.Part > 1000 or opi2.Part > 1000)) as bit) as HasContractorProcess, dbo.GetInkNames(j.ItemID, 1, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 1 or InkSide = 3))) as PantoneFace, dbo.GetInkNames(j.ItemID, 2, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 2 or InkSide = 3))) as PantoneBack, (select top 1 (case when FactReceiveDate is not null then cast(0 as datetime) else PlanReceiveDate end) from OrderProcessItemMaterial where MatTypeName = 'Paper' and ItemID = opi.ItemID and RequestModified = 0) as PaperReadyDate
-FROM OrderProcessItem opi  inner join WorkOrder wo on wo.N = opi.OrderID
+cast((opi.OwnCost + opi.ItemProfit) * wo.Course as decimal(18,2)) as ItemCost,
+ColorsA, ColorsB, PaperType, PrintType, PaperDensity, Pages, MachNum, NotebookPages, PaperFormatX, PaperFormatY,
+sp.Cathegory, cast(0 as int) as PantoneCountA, cast(0 as int) as PantoneCountB,
+(select top 1 cast(sl.Type as varchar(10)) + ':' + cast(opi1.Part as varchar(10)) from Service_Lakirovka sl inner join OrderProcessItem opi1 on sl.ItemID = opi1.ItemID
+   where opi1.OrderID = opi.OrderID and (opi1.Part = opi.Part or opi1.Part > 1000) and opi1.Enabled = 1 order by sl.N) as ProtectLakType1,
+    (select top 1 cast(sl.Type as varchar(10)) + ':' + cast(opi1.Part as varchar(10)) from Service_Lakirovka sl inner join OrderProcessItem opi1 on sl.ItemID = opi1.ItemID
+       where opi1.OrderID = opi.OrderID and (opi1.Part = opi.Part or opi1.Part > 1000) and opi1.Enabled = 1 order by sl.N desc) as ProtectLakType2,
+CallCustomer,
+cast((select count(*) from OrderProcessItem opi2 where opi2.OrderID = opi.OrderID
+           and opi2.Enabled = 1 and opi2.ContractorProcess = 1 and opi2.ProcessID <> 2 and opi2.ProcessID <> 39
+           and (opi2.Part = opi.Part or opi.Part > 1000 or opi2.Part > 1000)) as bit) as HasContractorProcess,
+dbo.GetInkNames(j.ItemID, 1, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 1 or InkSide = 3))) as PantoneFace,
+dbo.GetInkNames(j.ItemID, 2, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 2 or InkSide = 3))) as PantoneBack,
+(select top 1 (case when FactReceiveDate is not null then cast(0 as datetime) else PlanReceiveDate end) from OrderProcessItemMaterial where MatTypeName = 'Paper' and ItemID = opi.ItemID and RequestModified = 0) as PaperReadyDate
+
+FROM OrderProcessItem opi
+ inner join WorkOrder wo on wo.N = opi.OrderID
  inner join Customer cc on cc.N = wo.Customer
  right join Job j on j.ItemID = opi.ItemID
  left join Dic_SpecialJob dsj on dsj.Code = JobType
 left join Service_Print sp on sp.ItemID = opi.ItemID
-WHERE  j.EquipCode = 13
- and ((opi.Enabled = 1 and wo.IsDraft = 0 and wo.IsDeleted = 0) or JobType <> 0) and ((j.PlanStartDate between convert(datetime, '2012-08-29 07:00:00.000', 121) and convert(datetime, '2012-09-26 06:59:00.000', 121)) and j.FactStartDate is null  or (j.FactStartDate between convert(datetime, '2012-08-29 07:00:00.000', 121) and convert(datetime, '2012-09-26 06:59:00.000', 121)) or (j.PlanFinishDate between convert(datetime, '2012-08-29 07:00:00.000', 121) and convert(datetime, '2012-09-26 06:59:00.000', 121)) and j.FactFinishDate is null  or (j.FactFinishDate between convert(datetime, '2012-08-29 07:00:00.000', 121) and convert(datetime, '2012-09-26 06:59:00.000', 121)) or ((j.PlanStartDate < convert(datetime, '2012-08-29 07:00:00.000', 121) and j.FactStartDate is null or j.FactStartDate < convert(datetime, '2012-08-29 07:00:00.000', 121)) and (j.PlanFinishDate > convert(datetime, '2012-09-26 06:59:00.000', 121) and j.FactFinishDate is null or j.FactFinishDate > convert(datetime, '2012-09-26 06:59:00.000', 121))))
+WHERE
+-- j.EquipCode = 13 and
+ ((opi.Enabled = 1 and wo.IsDraft = 0 and wo.IsDeleted = 0) or JobType <> 0)
+ and ((j.PlanStartDate between convert(datetime, {STARTDATE}, 121) and convert(datetime, {ENDDATE}, 121))
+  and j.FactStartDate is null
+    or (j.FactStartDate between convert(datetime, {STARTDATE}, 121) and convert(datetime, {ENDDATE}, 121))
+     or (j.PlanFinishDate between convert(datetime, {STARTDATE}, 121) and convert(datetime, {ENDDATE}, 121))
+      and j.FactFinishDate is null
+      or (j.FactFinishDate between convert(datetime, {STARTDATE}, 121) and convert(datetime, {ENDDATE}, 121))
+       or ((j.PlanStartDate < convert(datetime, {STARTDATE}, 121) and j.FactStartDate is null or j.FactStartDate < convert(datetime, {STARTDATE}, 121))
+        and (j.PlanFinishDate > convert(datetime, {ENDDATE}, 121) and j.FactFinishDate is null or j.FactFinishDate > convert(datetime, {ENDDATE}, 121))))
 
