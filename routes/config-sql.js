@@ -1,10 +1,10 @@
-var server = '.\\SQLEXPRESS';
-var database = 'TriadaNew';
-var user = 'sa';
-var password = 'st';
+var server = '(local)';
+var database = 'tetrisNew';
+var user = 'alexey';
+var password = 'dosia';
 
-exports.connectionString = "Driver={SQL Server Native Client 11.0}"
+exports.connectionString = "Driver={SQL Server Native Client 10.0}"
     + ";Server=" + server
-    + ";Database={" + database
-    + "};UID={" + user
-    + "};PWD={" + password + "}";
+    + ";Database=" + database
+    + ";UID={" + user + "}"
+    + ";PWD={" + password + "}";

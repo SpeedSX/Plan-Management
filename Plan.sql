@@ -128,20 +128,22 @@ CallCustomer,
 cast((select count(*) from OrderProcessItem opi2 where opi2.OrderID = opi.OrderID
            and opi2.Enabled = 1 and opi2.ContractorProcess = 1 and opi2.ProcessID <> 2 and opi2.ProcessID <> 39
            and (opi2.Part = opi.Part or opi.Part > 1000 or opi2.Part > 1000)) as bit) as HasContractorProcess,
-dbo.GetInkNames(j.ItemID, 1, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 1 or InkSide = 3))) as PantoneFace,
-dbo.GetInkNames(j.ItemID, 2, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 2 or InkSide = 3))) as PantoneBack,
+--dbo.GetInkNames(j.ItemID, 1, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 1 or InkSide = 3))) as PantoneFace,
+--dbo.GetInkNames(j.ItemID, 2, (select COUNT(*) from Service_PrintInk p1 inner join OrderProcessItem opi1 on opi1.ItemID = p1.ItemID where LinkedItemID = j.ItemID and (InkSide = 2 or InkSide = 3))) as PantoneBack,
 (select top 1 (case when FactReceiveDate is not null then cast(0 as datetime) else PlanReceiveDate end) from OrderProcessItemMaterial where MatTypeName = 'Paper' and ItemID = opi.ItemID and RequestModified = 0) as PaperReadyDate,
 dp.Name as PartName,
-dpap.Name as PaperTypeName
+dpap.Name as PaperTypeName,
+dpr.Name as EquipName
 
 FROM OrderProcessItem opi
  inner join WorkOrder wo on wo.N = opi.OrderID
  inner join Customer cc on cc.N = wo.Customer
  inner join Dic_Parts dp on dp.Code = opi.Part
- inner join Dic_Paper dpap on dpap.Code = sp.PaperType
  right join Job j on j.ItemID = opi.ItemID
  left join Dic_SpecialJob dsj on dsj.Code = JobType
  left join Service_Print sp on sp.ItemID = opi.ItemID
+ inner join Dic_Paper dpap on dpap.Code = PaperType
+ inner join Dic_Printers dpr on dpr.Code = EquipCode
 WHERE
 -- j.EquipCode = 13 and
  ((opi.Enabled = 1 and wo.IsDraft = 0 and wo.IsDeleted = 0) or JobType <> 0)
